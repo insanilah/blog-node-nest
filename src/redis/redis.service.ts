@@ -7,8 +7,8 @@ export class RedisService {
 
     constructor() {
         this.redisClient = new Redis({
-            host: 'localhost', // Host Redis (or Redis URL if using Redis cloud)
-            port: 6379,        // Redis port (default is 6379)
+            host: process.env.REDIS_HOST, // Host Redis (or Redis URL if using Redis cloud)
+            port: Number(process.env.PORT),        // Redis port (default is 6379)
         });
     }
 
