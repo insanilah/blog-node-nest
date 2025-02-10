@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Get, Query, UseGuards, UnauthorizedException, Req, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, UseGuards, UnauthorizedException, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDTO } from './dto/register.dto';
 import { ResponseApi } from 'src/common/dto/response-api.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
+import { Throttle } from "@nestjs/throttler";
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +18,14 @@ export class AuthController {
     }
 
     @Post('login')
+    @Throttle({ default: { limit: 5, ttl: 60000 } }) // Maksimal 5 request per menit
     async login(@Body() loginDTO: LoginDTO) {
         const token = await this.authService.loginUser(loginDTO);
+
+        if (!token) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
         return new ResponseApi(200, 'Login successfully', token);
     }
 
@@ -44,4 +51,5 @@ export class AuthController {
         const data = this.authService.generateAndCreateObjectToken(user);
         return new ResponseApi(200, 'Login successfully', data);
     }
+
 }

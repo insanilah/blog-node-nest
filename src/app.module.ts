@@ -7,6 +7,7 @@ import { PostsModule } from './posts/posts.module';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConsumerModule } from './consumer/consumer.module';
+import { ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [
@@ -18,6 +19,10 @@ import { ConsumerModule } from './consumer/consumer.module';
     // RabbitMQModule,
     ConfigModule.forRoot({ isGlobal: true }),
     ConsumerModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60 * 1000, // 60 detik (dalam milidetik)
+      limit: 10, // Maksimal 10 request per TTL
+    }]),
   ],
   controllers: [],
   providers: [],
