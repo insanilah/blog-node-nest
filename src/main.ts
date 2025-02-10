@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { MicroserviceOptions, RmqOptions, Transport } from '@nestjs/microservices';
 import { ARTICLE_QUEUE } from './common/constants/rabbitmq.constant';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
@@ -43,7 +44,14 @@ async function bootstrap() {
     whitelist: true, // Menghapus properti yang tidak ada di DTO
   }));
 
+
   // await app.startAllMicroservices();
+
+  // Mengaktifkan CORS
+  app.enableCors({
+    // origin: 'http://localhost:3000', // Ganti sesuai origin frontend Anda
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
 
   await app.listen(8080);
 }

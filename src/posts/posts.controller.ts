@@ -9,7 +9,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
-    constructor(private readonly postService: PostsService) {}
+    constructor(private readonly postService: PostsService) { }
 
     @Post()
     @UseGuards(JwtAuthGuard)
@@ -20,8 +20,15 @@ export class PostsController {
 
     @Get()
     @UseGuards(JwtAuthGuard)
-    async getAllPosts(@Query('page') page = 1, @Query('pageSize') pageSize = 10, @Query('query') query = '') {
-        const response = await this.postService.getAllPosts({ page, pageSize, query });
+    async getAllPosts(
+        @Query('page') page = '1',
+        @Query('limit') pageSize = '10',
+        @Query('query') query = ''
+    ) {
+        const pageNumber = parseInt(page, 10);
+        const limit = parseInt(pageSize, 10);
+
+        const response = await this.postService.getAllPosts({ page: pageNumber, pageSize: limit, query });
         return new ResponseApi(200, "Posts retrieved successfully", response);
     }
 

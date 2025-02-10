@@ -65,20 +65,34 @@ export class PostsService {
     }
 
     async getAllPosts({ page, pageSize, query }) {
+        const skip = (page - 1) * pageSize;
+        const take = pageSize;
+    
+        // Hitung total post yang sesuai dengan filter
+        const totalItems = await this.prisma.posts.count({
+            where: { title: { contains: query, mode: Prisma.QueryMode.insensitive } },
+        });
+    
+        // Ambil data post dengan pagination
         const posts = await this.prisma.posts.findMany({
             where: { title: { contains: query, mode: Prisma.QueryMode.insensitive } },
-            skip: (page - 1) * pageSize,
-            take: pageSize,
+            skip,
+            take,
             include: {
                 user: { select: { username: true } },
                 post_categories: { select: { categories: { select: { name: true } } } },
                 post_tags: { select: { tags: { select: { name: true } } } },
             },
         });
-
-        return posts;
-
-    }
+    
+        return {
+            totalItems,
+            totalPages: Math.ceil(totalItems / pageSize),
+            currentPage: page,
+            pageSize,
+            items: posts,
+        };
+    }    
 
     async getPostById(postId: string, req: any): Promise<any> {
         // 1. Catat aktivitas pengguna (misalnya: melihat post)
@@ -141,7 +155,8 @@ export class PostsService {
                 title: {
                     equals: normalizedTitle,
                     mode: Prisma.QueryMode.insensitive,
-                }
+                },
+                id: { not: postId } // Pastikan bukan post yang sedang diedit
             }
         });
         if (existingTitle) {
@@ -160,7 +175,12 @@ export class PostsService {
         }
 
         // Cek apakah slug sudah ada
-        const existingSlug = await this.prisma.posts.findUnique({ where: { slug } });
+        const existingSlug = await this.prisma.posts.findFirst({ 
+            where: { 
+                slug,
+                id: { not: postId }, 
+            } 
+        });
         if (existingSlug) {
             throw new BadRequestException("Bad Request", "Slug already exists.");
         }
